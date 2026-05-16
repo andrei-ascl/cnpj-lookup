@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CNPJ Lookup Rebel - BrasilAPI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/tabler-icons.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --rebel-primary: #1C3F45;
+      --rebel-dark: #1A4048;
+      --rebel-cyan: #2EC4B6;
+      --rebel-red: #E63946;
+      --rebel-off-white: #F8F8F8;
+      --text-primary: #1a1a1a;
+      --text-secondary: #666;
+      --text-tertiary: #999;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f5;
+      --border-color: #e0e0e0;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text-primary: #ffffff;
+        --text-secondary: #ccc;
+        --text-tertiary: #999;
+        --bg-primary: #1a1a1a;
+        --bg-secondary: #2d2d2d;
+        --border-color: #444;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .rebel-header {
+      background: linear-gradient(135deg, var(--rebel-primary) 0%, var(--rebel-dark) 100%);
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      color: var(--rebel-off-white);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .rebel-logo-container {
+      flex-shrink: 0;
+    }
+
+    .rebel-logo-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .rebel-header-text h1 {
+      font-size: 24px;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .rebel-header-text p {
+      margin: 4px 0 0 0;
+      font-size: 12px;
+      opacity: 0.9;
+      font-style: italic;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 600px) {
+      .search-box {
+        flex-direction: column;
+      }
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 14px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-width: 200px;
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--rebel-primary);
+      box-shadow: 0 0 0 2px rgba(28, 63, 69, 0.1);
+    }
+
+    button {
+      padding: 12px 20px;
+      background: var(--rebel-primary);
+      color: var(--rebel-off-white);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+    }
+
+    button:hover {
+      background: var(--rebel-dark);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button.secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    button.secondary:hover {
+      background: var(--border-color);
+    }
+
+    button.danger {
+      background: var(--danger);
+      color: white;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    button.danger:hover {
+      background: #dc2626;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tab.active {
+      color: var(--rebel-primary);
+      border-bottom-color: var(--rebel-primary);
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--rebel-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error {
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .error {
+        background: #7f1d1d;
+        border-color: #991b1b;
+        color: #fecaca;
+      }
+    }
+
+    .result-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .result-header {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .result-header h2 {
+      margin: 0 0 0.25rem 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .cnpj-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      word-break: break-all;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 0.5rem;
+    }
+
+    .status-ativa {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .status-ativa {
+        background: #166534;
+        color: #dcfce7;
+      }
+    }
+
+    .status-inativa {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .status-inativa {
+        background: #7f1d1d;
+        color: #fecaca;
+      }
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .data-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .data-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .field-value {
+      font-size: 15px;
+      color: var(--text-primary);
+      font-weight: 400;
+    }
+
+    .field-value.na {
+      color: var(--text-tertiary);
+      font-style: italic;
+    }
+
+    .socios-section {
+      margin-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+      padding-top: 1rem;
+    }
+
+    .socios-section h3 {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin: 0 0 1rem 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .socio-item {
+      background: var(--bg-secondary);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      font-size: 14px;
+      border-left: 3px solid var(--rebel-primary);
+    }
+
+    .socio-nome {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .socio-cargo {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .api-info {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+
+    .history-item {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .history-item:hover {
+      border-color: var(--rebel-primary);
+      background: var(--bg-secondary);
+    }
+
+    .history-item:active {
+      transform: scale(0.98);
+    }
+
+    .history-item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-item-cnpj {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      word-break: break-all;
+    }
+
+    .history-item-razao {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .history-item-data {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .history-item-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      color: var(--text-tertiary);
+      display: block;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .history-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .history-controls-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .history-count {
+      font-size: 14px;
+      color: var(--text-secondary);
+      padding: 0 1rem;
+    }
+
+    .history-count strong {
+      color: var(--rebel-primary);
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      .rebel-header {
+        padding: 1rem;
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .rebel-header-text h1 {
+        font-size: 20px;
+      }
+
+      .rebel-logo-img {
+        width: 50px;
+        height: 50px;
+      }
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-tertiary);
+      font-size: 12px;
+      border-top: 1px solid var(--border-color);
+      margin-top: 2rem;
+    }
+
+    .footer a {
+      color: var(--rebel-primary);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="rebel-header">
+      <div class="rebel-logo-container">
+        <img class="rebel-logo-img" src="data:image/jpeg;base64,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" alt="Rebel Analytics" title="Rebel Analytics">
+      </div>
+      <div class="rebel-header-text">
+        <h1>CNPJ Lookup Rebel</h1>
+        <p>Be Rebel, but bring data.</p>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <input 
+        type="text" 
+        id="cnpjInput" 
+        placeholder="Digite um CNPJ (ex: 11.222.333/0001-81)"
+        inputmode="numeric"
+      />
+      <button onclick="searchCNPJ()">
+        <i class="ti ti-search"></i>
+        <span>Pesquisar</span>
+      </button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('resultado', event)">
+        <i class="ti ti-search"></i>
+        <span>Resultado</span>
+      </button>
+      <button class="tab" onclick="switchTab('historico', event)">
+        <i class="ti ti-history"></i>
+        <span>Histórico</span>
+      </button>
+    </div>
+
+    <div id="resultado" class="tab-content active">
+      <div id="container">
+        <p style="color: var(--text-secondary); font-size: 14px;">
+          Digite um CNPJ acima para consultar os dados públicos. Você obterá informações como razão social, porte da empresa, situação cadastral e dados dos sócios.
+        </p>
+        <div class="api-info">
+          <i class="ti ti-api"></i> Fonte: BrasilAPI — dados públicos
+        </div>
+      </div>
+    </div>
+
+    <div id="historico" class="tab-content">
+      <div class="history-controls">
+        <div class="history-count">
+          <strong id="historyCount">0</strong> pesquisas realizadas
+        </div>
+        <div class="history-controls-row">
+          <button class="secondary" onclick="exportarHistorico()" style="flex: 1;">
+            <i class="ti ti-download"></i>
+            Exportar CSV
+          </button>
+          <button class="danger" onclick="limparHistorico()" style="flex: 1;">
+            <i class="ti ti-trash"></i>
+            Limpar
+          </button>
+        </div>
+      </div>
+      <div id="historyContainer">
+        <div class="empty-state">
+          <i class="ti ti-history"></i>
+          <p>Nenhuma pesquisa realizada ainda</p>
+          <p style="font-size: 12px; margin-top: 0.5rem;">Suas pesquisas aparecerão aqui</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>
+        <strong>CNPJ Lookup Rebel</strong> • Powered by BrasilAPI
+      </p>
+      <p style="margin-top: 0.5rem;">
+        Dados são armazenados localmente. Nada é enviado para servidores externos.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'rebel_cnpj_history';
+
+    function formatarCNPJ(cnpj) {
+      return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    }
+
+    function mapearPorte(porte) {
+      const mapa = {
+        "MICRO EMPRESA": "ME",
+        "EMPRESA DE PEQUENO PORTE": "EPP",
+        "DEMAIS": "Demais"
+      };
+      return mapa[porte] || porte || "N/A";
+    }
+
+    function processarSocios(qsaList) {
+      if (!Array.isArray(qsaList) || qsaList.length === 0) return null;
+      const validos = qsaList.filter(s => s && s.nome_socio);
+      if (validos.length === 0) return null;
+      return validos.map(s => ({
+        nome: (s.nome_socio || '').trim(),
+        qualificacao: (s.qualificacao_socio || '').trim()
+      }));
+    }
+
+    function switchTab(tabName, event) {
+      if (event) event.preventDefault();
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');
+      event.target.closest('.tab').classList.add('active');
+      if (tabName === 'historico') carregarHistorico();
+    }
+
+    function salvarNoHistorico(cnpj, razaoSocial, porte, situacao, timestamp) {
+      let historico = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      historico.unshift({ cnpj, razaoSocial, porte, situacao, timestamp });
+      historico = historico.slice(0, 100);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(historico));
+      document.getElementById('historyCount').textContent = historico.length;
+    }
+
+    function carregarHistorico() {
+      const historico = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const container = document.getElementById('historyContainer');
+      if (historico.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="ti ti-history"></i><p>Nenhuma pesquisa realizada ainda</p></div>';
+        return;
+      }
+      let html = '';
+      historico.forEach((item, index) => {
+        const data = new Date(item.timestamp);
+        const dataFormatada = data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const statusClass = item.situacao === 'ATIVA' ? 'status-ativa' : 'status-inativa';
+        html += `<div class="history-item" onclick="pesquisarDoHistorico('${item.cnpj}')"><div class="history-item-content"><div class="history-item-cnpj">${formatarCNPJ(item.cnpj)}</div><div class="history-item-razao">${item.razaoSocial || '—'}</div><div class="history-item-data"><span>${dataFormatada}</span><span class="status-badge ${statusClass}">${item.situacao || 'N/A'}</span></div></div><div class="history-item-actions"><button class="danger" title="Remover" onclick="removerDoHistorico(event, ${index})"><i class="ti ti-x"></i></button></div></div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function pesquisarDoHistorico(cnpj) {
+      document.getElementById('cnpjInput').value = formatarCNPJ(cnpj);
+      searchCNPJ();
+    }
+
+    function removerDoHistorico(event, index) {
+      event.stopPropagation();
+      let historico = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      historico.splice(index, 1);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(historico));
+      document.getElementById('historyCount').textContent = historico.length;
+      carregarHistorico();
+    }
+
+    function limparHistorico() {
+      if (confirm('Tem certeza que deseja limpar todo o histórico?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        document.getElementById('historyCount').textContent = '0';
+        carregarHistorico();
+      }
+    }
+
+    function exportarHistorico() {
+      const historico = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      if (historico.length === 0) {
+        alert('Nenhuma pesquisa para exportar');
+        return;
+      }
+      let csv = 'CNPJ,Razão Social,Porte,Situação,Data/Hora\n';
+      historico.forEach(item => {
+        const data = new Date(item.timestamp).toLocaleString('pt-BR');
+        csv += `"${item.cnpj}","${item.razaoSocial || ''}","${item.porte || ''}","${item.situacao || ''}","${data}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `cnpj_historico_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    }
+
+    async function searchCNPJ() {
+      const cnpj = document.getElementById('cnpjInput').value.trim();
+      const container = document.getElementById('container');
+      
+      if (!cnpj) {
+        container.innerHTML = '<div class="error"><i class="ti ti-alert-circle"></i> Digite um CNPJ válido</div>';
+        return;
+      }
+      
+      const cleanCnpj = cnpj.replace(/\D/g, '');
+      if (cleanCnpj.length !== 14) {
+        container.innerHTML = '<div class="error"><i class="ti ti-alert-circle"></i> CNPJ deve conter 14 dígitos</div>';
+        return;
+      }
+      
+      container.innerHTML = '<div class="loading"><span class="spinner"></span> Consultando...</div>';
+      
+      try {
+        const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+        
+        if (!response.ok) {
+          container.innerHTML = '<div class="error"><i class="ti ti-alert-circle"></i> CNPJ não encontrado</div>';
+          return;
+        }
+
+        const data = await response.json();
+        
+        const dataAbertura = data.data_inicio_atividade;
+        let anoFundacao = null, idadeEmpresa = null;
+        
+        if (dataAbertura) {
+          anoFundacao = parseInt(dataAbertura.substring(0, 4));
+          idadeEmpresa = new Date().getFullYear() - anoFundacao;
+        }
+        
+        const situacaoAtiva = (data.descricao_situacao_cadastral || '').toUpperCase() === 'ATIVA';
+        const socios = processarSocios(data.qsa);
+        
+        salvarNoHistorico(cleanCnpj, data.razao_social || '—', mapearPorte(data.porte), data.descricao_situacao_cadastral || '—', new Date().toISOString());
+        
+        let sociosHtml = socios && socios.length > 0 ? socios.map(s => `<div class="socio-item"><div class="socio-nome">${s.nome}</div><div class="socio-cargo">${s.qualificacao || 'Sócio'}</div></div>`).join('') : '<p style="color: var(--text-secondary); font-size: 14px;">Sem informações de sócios</p>';
+        
+        const statusClass = situacaoAtiva ? 'status-ativa' : 'status-inativa';
+        const statusTexto = situacaoAtiva ? 'ATIVA' : (data.descricao_situacao_cadastral || 'DESCONHECIDA');
+        
+        container.innerHTML = `<div class="result-card"><div class="result-header"><h2>${data.razao_social || 'N/A'}</h2><div class="cnpj-label">CNPJ: <strong>${formatarCNPJ(cleanCnpj)}</strong></div><div class="status-badge ${statusClass}">${statusTexto}</div></div><div class="data-grid"><div class="data-field"><div class="field-label">Nome fantasia</div><div class="field-value ${!data.nome_fantasia ? 'na' : ''}">${data.nome_fantasia || '—'}</div></div><div class="data-field"><div class="field-label">Bairro</div><div class="field-value ${!data.bairro ? 'na' : ''}">${data.bairro || '—'}</div></div><div class="data-field"><div class="field-label">Porte</div><div class="field-value">${mapearPorte(data.porte)}</div></div><div class="data-field"><div class="field-label">Ano de fundação</div><div class="field-value ${anoFundacao === null ? 'na' : ''}">${anoFundacao || '—'}</div></div><div class="data-field"><div class="field-label">Idade da empresa</div><div class="field-value ${idadeEmpresa === null ? 'na' : ''}">${idadeEmpresa !== null ? idadeEmpresa + ' anos' : '—'}</div></div><div class="data-field"><div class="field-label">Setor (CNAE)</div><div class="field-value ${!data.cnae_fiscal_descricao ? 'na' : ''}">${data.cnae_fiscal_descricao || '—'}</div></div></div><div class="socios-section"><h3><i class="ti ti-users"></i> Sócios</h3>${sociosHtml}</div></div>`;
+      } catch (error) {
+        container.innerHTML = `<div class="error"><i class="ti ti-alert-circle"></i> Erro: ${error.message}</div>`;
+      }
+    }
+
+    document.getElementById('cnpjInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') searchCNPJ();
+    });
+
+    window.addEventListener('load', () => {
+      const historico = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      document.getElementById('historyCount').textContent = historico.length;
+    });
+  </script>
+</body>
+</html>
